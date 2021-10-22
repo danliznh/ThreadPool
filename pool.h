@@ -14,7 +14,7 @@
 using namespace std;
 
 template<typename QUEUETYPE = std::queue<shared_ptr<Task> > >
-class ThreadPool
+class ThreadPool:public enable_shared_from_this<ThreadPool<QUEUETYPE> >
 {
 private:
     vector<thread *> threads;
@@ -22,13 +22,17 @@ private:
     mutex m_mutex;
     condition_variable m_cond;
     bool is_running;
-public:
-    explicit ThreadPool(int size){
-        is_running = true;
+ public:
+    void init(int size){
         for (size_t i = 0; i < size; i++)
         {
-            threads.push_back(new thread(&ThreadPool::start, this));
+            threads.push_back(new thread(&ThreadPool::start, this->shared_from_this()));
         }
+    }
+
+    explicit ThreadPool(){
+        is_running = true;
+        //init(size);
     }
 
     void start(){
@@ -59,9 +63,9 @@ public:
         return t;
     }
 
-    void put_task(shared_ptr<Task> t){
+    void put_task(const shared_ptr<Task>& t){
         unique_lock<mutex> lock(m_mutex);
-        tasks.push(t);
+        tasks.push(std::move(t));
         m_cond.notify_all();
     }
 
