@@ -3,6 +3,7 @@
 
 #include<functional>
 #include<utility>
+#include<iostream>
 class Task{
 public:
     template<typename FUNC, typename ...ARGS>
@@ -12,6 +13,9 @@ public:
 
     void run(){
         this->func();
+    }
+    ~Task(){
+        std::cout <<"~Task"<<std::endl;
     }
 private:
     std::function<void()> func;
